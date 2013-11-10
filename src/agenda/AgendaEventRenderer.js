@@ -20,6 +20,7 @@ function AgendaEventRenderer() {
 	var setHeight = t.setHeight;
 	var getDaySegmentContainer = t.getDaySegmentContainer;
 	var getSlotSegmentContainer = t.getSlotSegmentContainer;
+	var getSlotBgSegmentContainer = t.getSlotBgSegmentContainer;
 	var getHoverListener = t.getHoverListener;
 	var getMaxMinute = t.getMaxMinute;
 	var getMinMinute = t.getMinMinute;
@@ -188,6 +189,7 @@ function AgendaEventRenderer() {
 			titleElement,
 			height,
 			slotSegmentContainer = getSlotSegmentContainer(),
+			slotBgSegmentContainer = getSlotBgSegmentContainer(),
 			isRTL = opt('isRTL');
 
 		// calculate position/dimensions, create html
@@ -245,6 +247,9 @@ function AgendaEventRenderer() {
 		slotSegmentContainer[0].innerHTML = html; // faster than html()
 		eventElements = slotSegmentContainer.children();
 
+		slotBgSegmentContainer[0].innerHTML = html; // faster than html()
+		eventElements = slotBgSegmentContainer.children();
+
 		// retrieve elements, run through eventRender callback, bind event handlers
 		for (i=0; i<segCnt; i++) {
 			seg = segs[i];
@@ -262,7 +267,11 @@ function AgendaEventRenderer() {
 							top: seg.top,
 							left: seg.left
 						})
-						.appendTo(slotSegmentContainer);
+          if (eventElement.isBackground) {
+						eventElement.appendTo(slotBgSegmentContainer);
+          } else {
+						eventElement.appendTo(slotSegmentContainer);
+          }
 				}
 				seg.element = eventElement;
 				if (event._id === modifiedEventId) {
@@ -275,6 +284,7 @@ function AgendaEventRenderer() {
 		}
 
 		lazySegBind(slotSegmentContainer, segs, bindSlotSeg);
+		lazySegBind(slotBgSegmentContainer, segs, bindSlotSeg);
 
 		// record event sides and title positions
 		for (i=0; i<segCnt; i++) {
