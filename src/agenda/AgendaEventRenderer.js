@@ -20,6 +20,7 @@ function AgendaEventRenderer() {
 	var setHeight = t.setHeight;
 	var getDaySegmentContainer = t.getDaySegmentContainer;
 	var getSlotSegmentContainer = t.getSlotSegmentContainer;
+	var getSlotBgSegmentContainer = t.getSlotBgSegmentContainer;
 	var getHoverListener = t.getHoverListener;
 	var getMaxMinute = t.getMaxMinute;
 	var getMinMinute = t.getMinMinute;
@@ -73,6 +74,7 @@ function AgendaEventRenderer() {
 		}
 
 		renderSlotSegs(compileSlotSegs(slotEvents), modifiedEventId);
+		renderSlotSegs(compileSlotSegs(slotEvents), modifiedEventId, true);
 	}
 
 
@@ -169,9 +171,10 @@ function AgendaEventRenderer() {
 	// TODO: when we refactor this, when user returns `false` eventRender, don't have empty space
 	// TODO: refactor will include using pixels to detect collisions instead of dates (handy for seg cmp)
 
-	function renderSlotSegs(segs, modifiedEventId) {
+	function renderSlotSegs(segs, modifiedEventId, bg) {
 
 		var i, segCnt=segs.length, seg,
+      new_segs = [],
 			event,
 			top,
 			bottom,
@@ -188,7 +191,19 @@ function AgendaEventRenderer() {
 			titleElement,
 			height,
 			slotSegmentContainer = getSlotSegmentContainer(),
+			slotBgSegmentContainer = getSlotBgSegmentContainer(),
 			isRTL = opt('isRTL');
+
+    // Strip out unwanted events
+		for (i=0; i<segCnt; i++) {
+      if (bg && segs[i].event.isBackground) {
+          new_segs.push(segs[i]);
+      } else if ( ! bg && ! segs[i].event.isBackground) {
+          new_segs.push(segs[i]);
+      }
+    }
+    segs = new_segs;
+    segCnt = segs.length;
 
 		// calculate position/dimensions, create html
 		for (i=0; i<segCnt; i++) {
@@ -199,16 +214,16 @@ function AgendaEventRenderer() {
 			columnLeft = colContentLeft(seg.col);
 			columnRight = colContentRight(seg.col);
 
-            if(event.isBackground) {
-                columnLeft -= 3;
-                columnRight += 3;
-            } else {
-                // shave off space on right near scrollbars (2.5%)
-                // TODO: move this to CSS somehow
-                columnRight -= (columnRight - columnLeft) * .025;
-            }
+      if(event.isBackground) {
+          columnLeft -= 3;
+          columnRight += 3;
+      } else {
+          // shave off space on right near scrollbars (2.5%)
+          // TODO: move this to CSS somehow
+          columnRight -= (columnRight - columnLeft) * .025;
+      }
 
-            columnWidth = columnRight - columnLeft;
+      columnWidth = columnRight - columnLeft;
 			width = columnWidth * (seg.forwardCoord - seg.backwardCoord);
 
 			if (opt('slotEventOverlap')) {
@@ -242,8 +257,13 @@ function AgendaEventRenderer() {
 			html += slotSegHtml(event, seg);
 		}
 
-		slotSegmentContainer[0].innerHTML = html; // faster than html()
-		eventElements = slotSegmentContainer.children();
+    if (bg) {
+      slotBgSegmentContainer[0].innerHTML = html; // faster than html()
+      eventElements = slotBgSegmentContainer.children();
+    } else {
+      slotSegmentContainer[0].innerHTML = html; // faster than html()
+      eventElements = slotSegmentContainer.children();
+    }
 
 		// retrieve elements, run through eventRender callback, bind event handlers
 		for (i=0; i<segCnt; i++) {
@@ -262,7 +282,11 @@ function AgendaEventRenderer() {
 							top: seg.top,
 							left: seg.left
 						})
-						.appendTo(slotSegmentContainer);
+          if (eventElement.isBackground) {
+						eventElement.appendTo(slotBgSegmentContainer);
+          } else {
+						eventElement.appendTo(slotSegmentContainer);
+          }
 				}
 				seg.element = eventElement;
 				if (event._id === modifiedEventId) {
@@ -275,6 +299,7 @@ function AgendaEventRenderer() {
 		}
 
 		lazySegBind(slotSegmentContainer, segs, bindSlotSeg);
+		lazySegBind(slotBgSegmentContainer, segs, bindSlotSeg);
 
 		// record event sides and title positions
 		for (i=0; i<segCnt; i++) {
@@ -349,12 +374,12 @@ function AgendaEventRenderer() {
 				"'" +
 			">" +
 			"<div class='fc-event-inner'>" +
-			"<div class='fc-event-time'>" +
-			htmlEscape(formatDates(event.start, event.end, opt('timeFormat'))) +
-			"</div>" +
-			"<div class='fc-event-title'>" +
-			htmlEscape(event.title || '') +
-			"</div>" +
+      "<div class='fc-event-time'>" +
+      htmlEscape(formatDates(event.start, event.end, opt('timeFormat'))) +
+      "</div>" +
+      "<div class='fc-event-title'>" +
+      htmlEscape(event.title || '') +
+      "</div>" +
 			"</div>" +
 			"<div class='fc-event-bg'></div>";
 

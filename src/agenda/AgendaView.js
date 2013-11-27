@@ -43,6 +43,7 @@ function AgendaView(element, calendar, viewName) {
 	t.colContentRight = colContentRight;
 	t.getDaySegmentContainer = function() { return daySegmentContainer };
 	t.getSlotSegmentContainer = function() { return slotSegmentContainer };
+	t.getSlotBgSegmentContainer = function() { return slotBgSegmentContainer };
 	t.getMinMinute = function() { return minMinute };
 	t.getMaxMinute = function() { return maxMinute };
 	t.getSlotContainer = function() { return slotContainer };
@@ -97,6 +98,7 @@ function AgendaView(element, calendar, viewName) {
 	var slotScroller;
 	var slotContainer;
 	var slotSegmentContainer;
+	var slotBgSegmentContainer;
 	var slotTable;
 	var selectionHelper;
 	
@@ -235,6 +237,9 @@ function AgendaView(element, calendar, viewName) {
 				
 		slotSegmentContainer =
 			$("<div class='fc-event-container' style='position:absolute;z-index:8;top:0;left:0'/>")
+				.appendTo(slotContainer);
+		slotBgSegmentContainer =
+      $("<div class='fc-background-event-container' style='position:absolute;z-index:-1;top:0;left:0'/>")
 				.appendTo(slotContainer);
 		
 		s =
